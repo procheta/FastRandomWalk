@@ -69,7 +69,7 @@ class Graph {
     Map<Integer, NodeNeighbors> nodePostings;
     Map<String, Edge> edgeMap;
     static Random r = new Random();
-    Boolean directed = false;
+    Boolean directed;
 
     final void loadEdgeList(String file) throws FileNotFoundException, IOException {
         edgeMap = new HashMap<>();
@@ -89,7 +89,7 @@ class Graph {
                 nodes.add(dest);
             }
         }
-        
+
         /*Iterator it = nodes.iterator();
         while(it.hasNext()){
             String n = (String) it.next();
@@ -126,8 +126,9 @@ class Graph {
 
     }
 
-    public Graph(String file) throws IOException {
+    public Graph(String file, Boolean directed) throws IOException {
         this.file = file;
+        this.directed = directed;
         loadEdgeList(file);
         makeGraph();
     }
@@ -174,7 +175,7 @@ class TransitionGroups {
         this.nodePostings = g.nodePostings;
     }
 
-    Set<Node>[] getTransitionGroup(Node t, Node v, int k) {
+    Set<Node>[] getTransitionGroup(Node t, Node v, int k, String rWalkMode) {
         Set<Node>[] tv_relgrp = null;
         String key = null;
         if (t != null) {
@@ -199,29 +200,44 @@ class TransitionGroups {
             if (t != null) {
                 tx = new Edge(t, x);
                 xt = new Edge(x, t);
-                if (l.neighbors.size() >= k) {
-                    if (edgeMap.get(tx.toString()) != null || edgeMap.get(xt.toString()) != null) {
-                        graph_case = 0;
+                if (rWalkMode.equals("Biased_Random_Walk")) {
+                    if (l.neighbors.size() >= k) {
+                        if (edgeMap.get(tx.toString()) != null || edgeMap.get(xt.toString()) != null) {
+                            graph_case = 0;
+                        } else {
+                            graph_case = 1;
+                        }
                     } else {
-                        graph_case = 1;
+                        graph_case = 2;
                     }
-                } else {
-                    graph_case = 2;
+                }
+                if (rWalkMode.equals("Node2vec")) {
+                    if (x.id == t.id) {
+                        graph_case = 0;
+                    } else if (edgeMap.get(tx.toString()) == null && edgeMap.get(xt.toString()) == null) {
+                        graph_case = 1;
+                    } else if (edgeMap.get(tx.toString()) != null || edgeMap.get(xt.toString()) != null) {
+                        graph_case = 2;
+                    }
                 }
                 //System.out.println("graph case " + graph_case);
                 tv_relgrp[graph_case].add(x);
                 transitionGrps.put(key, tv_relgrp);
             } else {
-                if (l.neighbors.size() >= k) {
-                    graph_case = 0;
-                } else {
+                if (rWalkMode.equals("Biased_Random_Walk")) {
+                    if (l.neighbors.size() >= k) {
+                        graph_case = 0;
+                    } else {
+                        graph_case = 2;
+                    }
+                }
+                if (rWalkMode.equals("Node2vec")) {
                     graph_case = 2;
                 }
                 tv_relgrp[graph_case].add(x);
             }
         }
         return tv_relgrp;
-
     }
 }
 
@@ -234,8 +250,9 @@ public class RWalk {
     Graph g;
     int k;
     TransitionGroups tg;
+    String rWalkMode;
 
-    RWalk(float alpha, float beta, int numSteps, int numWalks, int k) {
+    RWalk(float alpha, float beta, int numSteps, int numWalks, int k, String rWalkMode) {
         this.alpha = alpha;
         this.beta = beta;
         System.out.println("Number of steps " + numSteps);
@@ -243,6 +260,7 @@ public class RWalk {
         this.numWalks = numWalks;
         System.out.println("Number of walks " + numWalks);
         this.k = k;
+        this.rWalkMode = rWalkMode;
     }
 
     void setGraph(Graph g) {
@@ -253,9 +271,13 @@ public class RWalk {
     List<Integer> walk(Node src, int steps, float alpha, float beta) {
         List<Integer> accumulatedWalkSeq = new ArrayList<>();
         float[] eventProbs = new float[2];
-        eventProbs[0] = alpha;
-        eventProbs[1] = alpha + beta;
-        //Node n = new Node(-1);
+        if (rWalkMode.equals("Biased_Random_Walk")) {
+            eventProbs[0] = alpha;
+            eventProbs[1] = alpha + beta;
+        } else {
+            eventProbs[0] = alpha;
+            eventProbs[1] = beta;
+        }
         walk_r(null, src, accumulatedWalkSeq, steps, eventProbs);
 
         return accumulatedWalkSeq;
@@ -267,7 +289,7 @@ public class RWalk {
         }
 
         // group neighbors x by 3 possible events
-        Set<Node>[] eventGrps = tg.getTransitionGroup(t, v, k);
+        Set<Node>[] eventGrps = tg.getTransitionGroup(t, v, k, rWalkMode);
         // sample an event
         Random r = new Random();
         float sampled_in_0_1 = r.nextFloat();
@@ -276,8 +298,10 @@ public class RWalk {
         //System.out.println(randomEvent + " " + sampled_in_0_1);
         // sample a neighbor from the group
         try {
+
             Set<Node> choiceSet = eventGrps[randomEvent];
             int elementToSelect = r.nextInt(choiceSet.size());
+
             Node x = null;
 
             int i = 0;
@@ -327,19 +351,21 @@ public class RWalk {
     }
 
     public static void main(String[] args) throws IOException {
-        if (args.length < 5) {
+        if (args.length < 8) {
             // System.err.println("usage: java RWalk <edgelist file> <alpha> <beta> <walk-len> <num_walks> <k>");
             //return;
-            args = new String[6];
-            args[0] = "edge_file_10000_10_0.1.txt";
+            args = new String[8];
+            args[0] = "C:\\Users\\Procheta\\Downloads/edge_file_10000_10_0.1.txt";
             args[1] = "0.8";
             args[2] = "0.2";
             args[3] = "50";
             args[4] = "2";
             args[5] = "100";
+            args[6] = "false";
+            args[7] = "Biased_Random_Walk";
         }
 
-        Graph g = new Graph(args[0]);
+        Graph g = new Graph(args[0], Boolean.parseBoolean(args[6]));
         System.out.println("Printing the Graph");
         //System.out.println(g.toString());
 
@@ -348,7 +374,7 @@ public class RWalk {
                 Float.parseFloat(args[2]),
                 Integer.parseInt(args[3]),
                 Integer.parseInt(args[4]),
-                Integer.parseInt(args[5])
+                Integer.parseInt(args[5]), args[7]
         );
         rwalk.setGraph(g);
 
