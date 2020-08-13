@@ -335,17 +335,20 @@ public class RWalk {
     String constructAndSaveWalkFromRandomSrc() {
 
         StringBuffer buff = new StringBuffer();
-
-        // Select a node at random and start a walk
-        Node t = g.getRandomNode();
-        //t.id = 121;
-        System.out.println("Starting node " + t.id);
-        for (int i = 0; i < numWalks; i++) {
-            List<Integer> nodesequence = walk(t, numSteps, alpha, beta);
-            for (int nodeid : nodesequence) {
-                buff.append(nodeid).append(" ");
+        Iterator it = g.nodePostings.keySet().iterator();
+        while (it.hasNext()) {
+            Integer node_id = (Integer) it.next();
+            Node t = g.nodePostings.get(node_id).src;
+            System.out.println("Starting node " + t.id);
+            // Select a node at random and start a walk
+            for (int i = 0; i < numWalks; i++) {
+                List<Integer> nodesequence = walk(t, numSteps, alpha, beta);
+                buff.append(t.id).append(" ");
+                for (int nodeid : nodesequence) {
+                    buff.append(nodeid).append(" ");
+                }
+                buff.append("\n");
             }
-            buff.append("\n");
         }
         return buff.toString();
     }
