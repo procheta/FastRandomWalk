@@ -1,5 +1,5 @@
 mvn compile
-if [ $# -lt 8]
+if [ $# -lt 8 ]
 then
 	echo "Usage <edge file path> <alpha> <beta> <walk_len> <numWalk> <k> <directed/undirected> <rwalkmode>(Node2vec/Biased_Random_Walk)"	
 	exit
