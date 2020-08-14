@@ -271,13 +271,10 @@ public class RWalk {
     List<Integer> walk(Node src, int steps, float alpha, float beta) {
         List<Integer> accumulatedWalkSeq = new ArrayList<>();
         float[] eventProbs = new float[2];
-        if (rWalkMode.equals("Biased_Random_Walk")) {
-            eventProbs[0] = alpha;
-            eventProbs[1] = alpha + beta;
-        } else {
-            eventProbs[0] = alpha;
-            eventProbs[1] = beta;
-        }
+
+        eventProbs[0] = alpha;
+        eventProbs[1] = alpha + beta;
+
         walk_r(null, src, accumulatedWalkSeq, steps, eventProbs);
 
         return accumulatedWalkSeq;
@@ -358,12 +355,12 @@ public class RWalk {
             // System.err.println("usage: java RWalk <edgelist file> <alpha> <beta> <walk-len> <num_walks> <k>");
             //return;
             args = new String[8];
-            args[0] = "C:\\Users\\Procheta\\Downloads/edge_file_10000_10_0.1.txt";
-            args[1] = "0.8";
+            args[0] = "C:\\Users\\Procheta\\Downloads\\clique_graph_generator_code.tar\\clique_graph_generator_code/edge_file_100_1_0.1.txt";
+            args[1] = "0.7";
             args[2] = "0.2";
-            args[3] = "50";
-            args[4] = "2";
-            args[5] = "100";
+            args[3] = "20";
+            args[4] = "4";
+            args[5] = "10";
             args[6] = "false";
             args[7] = "Biased_Random_Walk";
         }
