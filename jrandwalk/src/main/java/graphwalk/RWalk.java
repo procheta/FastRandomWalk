@@ -89,7 +89,7 @@ class Graph {
                 nodes.add(dest);
             }
         }
-
+        
         /*Iterator it = nodes.iterator();
         while(it.hasNext()){
             String n = (String) it.next();
@@ -329,6 +329,7 @@ public class RWalk {
     void constructAndSaveWalks() throws IOException {
         FileWriter fw = new FileWriter(g.file + ".walk");
         BufferedWriter bw = new BufferedWriter(fw);
+        System.out.println(g.nodePostings.size());
         for (int node_id: g.nodePostings.keySet()) {
             Node t = g.nodePostings.get(node_id).src;
             System.out.println("Starting node " + t.id);
@@ -357,12 +358,12 @@ public class RWalk {
             // System.err.println("usage: java RWalk <edgelist file> <alpha> <beta> <walk-len> <num_walks> <k>");
             //return;
             args = new String[8];
-            args[0] = "C:\\Users\\Procheta\\Downloads/edge_file_10000_1_0.1.txt";
+            args[0] = "C:\\Users\\Procheta\\Downloads\\clique_graph_generator_code.tar\\clique_graph_generator_code/edge_file_10000_1_0.1.txt";
             args[1] = "0.7";
             args[2] = "0.2";
-            args[3] = "50";
+            args[3] = "300";
             args[4] = "5";
-            args[5] = "90";
+            args[5] = "176";
             args[6] = "false";
             args[7] = "Biased_Random_Walk";
         }
